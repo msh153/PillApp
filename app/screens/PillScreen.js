@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { TextInput, View, StyleSheet, Button} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Button, ToastAndroid, Text, TouchableOpacity} from 'react-native';
+import { useDispatch } from 'react-redux';
+import { NavigationContainer } from '@react-navigation/native';
 import DatePicker from 'react-native-date-picker'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { connectAp, getApnames, } from '../actions';
+
+
+const Tab = createBottomTabNavigator();
 
 export const PillScreen = () => {
     const dispatch = useDispatch();
@@ -13,6 +20,7 @@ export const PillScreen = () => {
     const [password, onChangePassword] = useState('');
     const [date, setDate] = useState(new Date());
     const [date2, setDate2] = useState(new Date());
+    const [showDate2, setShowDate2] = useState(false);
 
     const [isEnabled, setIsEnabled] = useState(false);
 
@@ -23,13 +31,38 @@ export const PillScreen = () => {
             setIsEnabled(false);
     }, [ssid]);
 
+    const showToast = useCallback(() => {
+        ToastAndroid.show('Take pill from the slot', ToastAndroid.SHORT);
+      }, []);
+
     return (
-        <View style={{ flex: 1, padding: 25 }}>
-            {
-                <>
-                    <View style={{ backgroundColor: 'white', bottom: '0%' }}>
+        <NavigationContainer independent={true}>
+        <Tab.Navigator
+              screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                  let iconName;
+      
+                  if (route.name === 'Time') {
+                    iconName = focused
+                      ? 'time'
+                      : 'time-outline';
+                      return <Ionicons  name={iconName} size={size} color={color} />;
+                    } else if (route.name === 'GiveNow') {
+                    iconName = 'pills';
+                    return <Fontisto  name={iconName} size={size} color={color} />;
+                  }
+                },
+                tabBarActiveTintColor: '#2296f3',
+                tabBarInactiveTintColor: 'gray',
+                tabBarShowLabel: false,
+                headerShown: false,
+              })}
+            >
+            <Tab.Screen name="Time" children= {() => 
+                <View style={{ flex: 1, padding: 25, justifyContent: 'space-between'  }}>
+                    <View style={{ justifyContent: "space-around", alignItems: 'center', }}>
                         <DatePicker
-                            style={{width: 200}}
+                            style={[{width:"100%", backgroundColor: 'white',}]}
                             date={date}
                             mode="time"
                             placeholder="select date"
@@ -48,9 +81,17 @@ export const PillScreen = () => {
                                 }
                             }}
                             onDateChange={(date) => setDate(date)}
+                        />
+                        <View style={{flexDirection:'row-reverse', width:'100%'}}>
+                            <MaterialCommunityIcons 
+                                style={{ fontSize: 40, color: '#2296f3' }}  
+                                name={showDate2 ? 'clock-minus-outline' : 'clock-plus-outline'}
+                                onPress={()=> setShowDate2(!showDate2)} 
                             />
-                        <DatePicker
-                            style={{width: 200}}
+                        </View>
+                        { showDate2 &&
+                            <DatePicker
+                            style={[{width:'100%', backgroundColor: 'white'}]}
                             date={date2}
                             mode="time"
                             placeholder="select date"
@@ -70,12 +111,26 @@ export const PillScreen = () => {
                             }}
                             onDateChange={(date) => setDate2(date)}
                             />
-                        <Button title={'Set time'}
-                            disabled={isEnabled}
-                            onPress={() => { onChangeSsid(''); onChangePassword(''); dispatch(connectAp(ssid, password)); }} />
+                        }
                     </View>
-                </>
-            }
-        </View >
+                <Button
+                    style={{ flexDirection: 'column', bottom: 10 }}
+                    title={'Set time'}
+                    disabled={isEnabled}
+                    onPress={() => { onChangeSsid(''); onChangePassword(''); dispatch(connectAp(ssid, password)); }} />
+                </View >
+            } />
+                <Tab.Screen name="GiveNow" children= {() =>
+                    <View style={{ flex: 1, padding: 25, justifyContent: "space-around"  }}>
+                        {
+                                <Button
+                                    title={'Give now'}
+                                    disabled={isEnabled}
+                                    onPress={() => { showToast(); dispatch(connectAp(ssid, password)); }} />
+                        }
+                    </View >
+                } />
+    </Tab.Navigator>
+    </NavigationContainer>
     );
 };
