@@ -12,6 +12,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import {
     createDrawerNavigator,
 } from '@react-navigation/drawer';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Drawer = createDrawerNavigator();
 
@@ -20,13 +21,24 @@ const App = () => {
     const store = createStore(rootReducer,
             applyMiddleware(epicMiddleware)
     );
+
     epicMiddleware.run(rootEpic);
     return (
             <Provider store={store} >
                 <NavigationContainer independent={true}>
                     <Drawer.Navigator>
-                        <Drawer.Screen name="Pill arrangment" component={PillScreen} />
-                        <Drawer.Screen name="Settings" component={SettingsScreen} />
+                        <Drawer.Screen name="Pill arrangment" component={PillScreen}options={{
+                            drawerIcon: ({color, size} ) => <MaterialCommunityIcons
+                                size={size}
+                                color={color}
+                                name={'pill'}></MaterialCommunityIcons>
+                        }}/>
+                        <Drawer.Screen name="Settings" component={SettingsScreen} options={{
+                            drawerIcon: ({color, size} ) => <MaterialCommunityIcons
+                                size={size}
+                                color={color}
+                                name={'wifi'}></MaterialCommunityIcons>
+                        }}/>
                     </Drawer.Navigator>
                 </NavigationContainer>
             </Provider>

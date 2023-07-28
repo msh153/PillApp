@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Button, ToastAndroid, Text, TouchableOpacity} from 'react-native';
+import { View, Button, ToastAndroid } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import DatePicker from 'react-native-date-picker'
@@ -7,34 +7,32 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import PushNotification from 'react-native-push-notification';
 
-import { connectAp, getApnames, } from '../actions';
-
+import { setTime, setTime1, giveNow } from '../actions';
 
 const Tab = createBottomTabNavigator();
 
 export const PillScreen = () => {
     const dispatch = useDispatch();
 
-    const [ssid, onChangeSsid] = useState('');
-    const [password, onChangePassword] = useState('');
     const [date, setDate] = useState(new Date());
     const [date2, setDate2] = useState(new Date());
     const [showDate2, setShowDate2] = useState(false);
 
-    const [isEnabled, setIsEnabled] = useState(false);
-
-    useEffect(() => {
-        if (ssid)
-            setIsEnabled(true);
-        else
-            setIsEnabled(false);
-    }, [ssid]);
-
-    const showToast = useCallback(() => {
+    const showToast = (() => {
         ToastAndroid.show('Take pill from the slot', ToastAndroid.SHORT);
       }, []);
-
+    
+      useEffect(() =>
+    PushNotification.createChannel(
+        {
+          channelId: 'channel-id', // (required)
+          channelName: 'My channel', // (required)
+          channelDescription: 'A channel to categorise your notifications', // (optional) default: undefined.
+        }, (created) => console.log(`createChannel returned '${created}'`),
+      ), []
+      )
     return (
         <NavigationContainer independent={true}>
         <Tab.Navigator
@@ -62,7 +60,7 @@ export const PillScreen = () => {
                 <View style={{ flex: 1, padding: 25, justifyContent: 'space-between'  }}>
                     <View style={{ justifyContent: "space-around", alignItems: 'center', }}>
                         <DatePicker
-                            style={[{width:"100%", backgroundColor: 'white',}]}
+                            style={[{width:"100%", backgroundColor: 'white'}]}
                             date={date}
                             mode="time"
                             placeholder="select date"
@@ -116,8 +114,37 @@ export const PillScreen = () => {
                 <Button
                     style={{ flexDirection: 'column', bottom: 10 }}
                     title={'Set time'}
-                    disabled={isEnabled}
-                    onPress={() => { onChangeSsid(''); onChangePassword(''); dispatch(connectAp(ssid, password)); }} />
+                    onPress={() => {
+                        if(showDate2){
+                            PushNotification.localNotificationSchedule({
+                                message: "Your pill is waiting for you", // (required)
+                                date: new Date(date),
+                                actions: ["ReplyInput"],
+                                reply_button_text: "Ok" // (required)
+                              })
+                            PushNotification.localNotificationSchedule({
+                                message: "Your pill is waiting for you", // (required)
+                                date: new Date(date2),
+                                actions: ["ReplyInput"],
+                                reply_button_text: "Ok" // (required)
+                              })
+                            dispatch(setTime(
+                                date.getHours(), date.getMinutes(),
+                                date2.getHours(), date2.getMinutes()
+                                ));
+                        }
+                        else{
+                            PushNotification.localNotificationSchedule({
+                                message: "Your pill is waiting for you", // (required)
+                                date: new Date(date),
+                                actions: ["ReplyInput"],
+                                reply_button_text: "Ok" // (required)
+                              })
+                            dispatch(setTime1(
+                                date.getHours(), date.getMinutes()
+                                ));
+                        }
+                     }} />
                 </View >
             } />
                 <Tab.Screen name="GiveNow" children= {() =>
@@ -125,8 +152,7 @@ export const PillScreen = () => {
                         {
                                 <Button
                                     title={'Give now'}
-                                    disabled={isEnabled}
-                                    onPress={() => { showToast(); dispatch(connectAp(ssid, password)); }} />
+                                    onPress={() => { showToast(); dispatch(giveNow()); }} />
                         }
                     </View >
                 } />
